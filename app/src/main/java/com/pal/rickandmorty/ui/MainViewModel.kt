@@ -1,9 +1,7 @@
 package com.pal.rickandmorty.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pal.rickandmorty.data.network.NetworkDataSource
 import com.pal.rickandmorty.domain.GetListOfCharactersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
