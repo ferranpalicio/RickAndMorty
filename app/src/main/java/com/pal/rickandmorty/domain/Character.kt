@@ -1,27 +1,13 @@
-package com.pal.rickandmorty.data.network.model
+package com.pal.rickandmorty.domain
 
-import com.pal.rickandmorty.domain.Character
-
-class CharacterDTO(
+data class Character(
     val id: Int,
     val name: String,
     val status: String,
     val species: String,
     val type: String,
     val image: String,
-    val location: LocationDTO
-)
-
-class LocationDTO(val name: String)
-
-fun CharacterDTO.toDomain() = Character(
-    id = id,
-    name = name,
-    status = status,
-    species = species,
-    type = type,
-    image = image,
-    location = location.name
+    val location: String
 )
 
 /**
