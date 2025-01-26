@@ -1,6 +1,6 @@
 package com.pal.rickandmorty.domain
 
-@SuppressWarnings("unused")
+@Suppress("unused")
 sealed class AppFailure : Throwable() {
     sealed class LocalAppFailure : AppFailure() {
         class NoDataError : LocalAppFailure()
