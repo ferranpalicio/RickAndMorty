@@ -54,12 +54,16 @@ dependencies {
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
     implementation(libs.retrofit)
     implementation(libs.okHttp.logging)
 
     implementation(libs.moshi)
     implementation(libs.moshi.converter)
     ksp(libs.moshiKotlinCodegen)//https://developer.android.com/build/migrate-to-ksp
+
+    implementation(libs.coil.compose)
+    implementation(libs.coil.okttp)
 
     implementation(libs.androidx.navigation)
 

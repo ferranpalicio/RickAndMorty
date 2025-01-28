@@ -4,20 +4,21 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.pal.rickandmorty.ui.MainViewModel
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.pal.rickandmorty.ui.ListOfCharacters
 import com.pal.rickandmorty.ui.theme.RickAndMortyTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -29,34 +30,36 @@ class MainActivity : ComponentActivity() {
         setContent {
             RickAndMortyTheme {
 
-                val viewModel: MainViewModel by viewModels()
-                val listScreenStateState = viewModel.listState.collectAsState()
-
-                LaunchedEffect(Unit) {
-                    viewModel.getCharacters(1)
-                }
-
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Column(
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                            .verticalScroll(rememberScrollState())
-                    ) {
-                        if (listScreenStateState.value.isLoading) {
-                            CircularProgressIndicator()
-                        } else if (listScreenStateState.value.isError) {
-                            Text(
-                                text = "Error",
-                                modifier = Modifier.padding(innerPadding)
-                            )
-                        } else {
-                            Text(text = "Success ${listScreenStateState.value.characters}")
+                val navController = rememberNavController()
+                Scaffold(
+                    modifier = Modifier.safeDrawingPadding(),
+                    topBar = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "Rick and Morty")
                         }
+                    }
+                ) { innerPadding ->
+                    NavHost(
+                        navController,
+                        startDestination = NavigationItem.List.route,
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+                        composable(NavigationItem.List.route) { ListOfCharacters(navController) }
+                        composable(NavigationItem.Detail.route) { CharacterDetail(navController) }
                     }
                 }
             }
         }
     }
+
+    @Composable
+    private fun CharacterDetail(navController: NavHostController) {
+        TODO("Not yet implemented")
+    }
+
 }

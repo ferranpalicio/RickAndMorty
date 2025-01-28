@@ -9,12 +9,14 @@ data class ListScreenState(
 )
 
 data class CharacterItem(
+    val id: Int,
     val name: String,
     val image: String,
     val subtitle: String
 )
 
 fun Character.toItemState() = CharacterItem(
+    id = id,
     name = name,
     image = image,
     subtitle = "$status - $species - $type"

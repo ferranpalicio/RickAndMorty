@@ -32,8 +32,8 @@ class MainViewModel @Inject constructor(
             delay(2000)
             getListOfCharactersUseCase(page).fold(
                 onSuccess = { characters ->
-                    _listState.update {
-                        it.copy(
+                    _listState.update { state ->
+                        state.copy(
                             characters = characters.map { it.toItemState() },
                             isLoading = false,
                             isError = false
