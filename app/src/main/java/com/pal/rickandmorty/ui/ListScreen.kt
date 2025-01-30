@@ -1,17 +1,19 @@
 package com.pal.rickandmorty.ui
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,6 +25,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import coil3.ImageLoader
 import coil3.compose.AsyncImage
 import coil3.imageLoader
@@ -31,28 +35,67 @@ import coil3.request.crossfade
 import coil3.util.DebugLogger
 import com.pal.rickandmorty.R
 import com.pal.rickandmorty.domain.Character
+import java.net.UnknownHostException
 
 @Composable
 fun ListOfCharacters(
-    listScreenState: ListScreenState,
+    characters: LazyPagingItems<Character>,
     onCharacterClick: (Int) -> Unit
 ) {
-    Log.i("TAG", "ListOfCharacters")
-    if (listScreenState.isLoading) {
-        Text(text = "Loading...")
-    } else if (listScreenState.isError) {
-        Text(text = "Error")
-    } else {
-        val imageLoader = LocalContext.current.imageLoader.newBuilder()
-            .logger(DebugLogger())
-            .build()
+    val imageLoader = LocalContext.current.imageLoader.newBuilder()
+        .logger(DebugLogger())
+        .build()
+    when {
+        //Initial load
+        characters.loadState.refresh is LoadState.Loading && characters.itemCount == 0 -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(64.dp), color = Color.White
+                )
+            }
+        }
 
-        val items = listScreenState.characters
-        LazyColumn {
-            items(
-                count = items.size,
-                key = { items[it].id }) { index ->
-                CharacterItem(items[index], imageLoader, onCharacterClick)
+        //Empty list
+        characters.loadState.refresh is LoadState.NotLoading && characters.itemCount == 0 -> {
+            Text(text = "No data")
+        }
+
+        //error
+        characters.loadState.append is LoadState.Error -> {
+            Box(
+                Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+            ) {
+                val e = characters.loadState.refresh as LoadState.Error
+                val message = if (e.error is UnknownHostException) {
+                    "Connection error"
+                } else {
+                    e.error.localizedMessage ?: "Unknown error"
+                }
+                Text(text = message)
+            }
+        }
+
+        else -> {
+            LazyColumn {
+                items(characters.itemCount) { index ->
+                    characters[index]?.let { characterModel ->
+                        CharacterItem(
+                            character = characterModel,
+                            modifier = Modifier.clickable {
+                                onCharacterClick(index)
+                            },
+                            imageLoader = imageLoader
+                        )
+                    }
+                }
+            }
+
+            if (characters.loadState.append is LoadState.Loading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(64.dp), color = Color.White
+                    )
+                }
             }
         }
     }
@@ -61,12 +104,11 @@ fun ListOfCharacters(
 @Composable
 fun CharacterItem(
     character: Character,
-    imageLoader: ImageLoader?,
-    onCharacterClick: (Int) -> Unit
+    modifier: Modifier = Modifier,
+    imageLoader: ImageLoader?
 ) {
     Row(
-        modifier = Modifier
-            .clickable { onCharacterClick(character.id) }
+        modifier = modifier
             .height(IntrinsicSize.Min)
             .fillMaxWidth()
             .padding(16.dp)
@@ -105,6 +147,6 @@ fun PreviewCharacterItem() {
             id = 1,
             name = "Rick",
             image = "https://rickandmortyapi.com/api/character/avatar/1.jpeg"
-        ), null
-    ) {}
+        ), imageLoader = null
+    )
 }

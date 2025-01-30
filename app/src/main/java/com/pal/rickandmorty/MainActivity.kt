@@ -10,17 +10,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import com.pal.rickandmorty.domain.AppFailure
+import com.pal.rickandmorty.domain.Character
 import com.pal.rickandmorty.ui.CharacterDetail
 import com.pal.rickandmorty.ui.ListOfCharacters
 import com.pal.rickandmorty.ui.MainViewModel
@@ -38,9 +40,8 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val viewModel: MainViewModel = hiltViewModel()
 
-                LaunchedEffect(Unit) {
-                    viewModel.getCharacters(1)
-                }
+                val characters: LazyPagingItems<Character> =
+                    viewModel.characters.collectAsLazyPagingItems()
 
                 Scaffold(
                     modifier = Modifier.safeDrawingPadding(),
@@ -62,25 +63,29 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable(NavigationItem.List.route) {
                             ListOfCharacters(
-                                listScreenState = viewModel.listState.collectAsStateWithLifecycle().value
-                            ) {
+                                characters = characters
+                            ) { index ->
                                 val route = NavigationItem.Detail.route.replace(
-                                    "{$DETAIL_ID_PARAM}",
-                                    it.toString()
+                                    "{$DETAIL_POS_PARAM}",
+                                    index.toString()
                                 )
                                 navController.navigate(route)
                             }
                         }
                         composable(
                             NavigationItem.Detail.route,
-                            arguments = listOf(navArgument(DETAIL_ID_PARAM) {
+                            arguments = listOf(navArgument(DETAIL_POS_PARAM) {
                                 type = NavType.IntType
                             })
                         ) {
-                            val id: Int = it.arguments?.getInt(DETAIL_ID_PARAM, 0) ?: 0
-                            CharacterDetail(
-                                characterResult = viewModel.getCharacterDetail(id)
-                            )
+                            val pos = it.arguments?.getInt(DETAIL_POS_PARAM, -1) ?: -1
+                            val characterResult = if (pos > 0) {
+                                Result.success(characters.itemSnapshotList.items[pos])
+                            } else {
+                                Result.failure(AppFailure.LocalAppFailure.NoDataError())
+                            }
+
+                            CharacterDetail(characterResult = characterResult)
                         }
                     }
                 }

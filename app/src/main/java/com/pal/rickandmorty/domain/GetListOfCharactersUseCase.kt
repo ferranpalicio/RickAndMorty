@@ -1,27 +1,21 @@
 package com.pal.rickandmorty.domain
 
-import com.pal.rickandmorty.data.network.NetworkDataSource
-import com.pal.rickandmorty.data.network.model.ApiFailure
-import com.pal.rickandmorty.data.network.model.CharacterDTO
-import com.pal.rickandmorty.data.network.model.toDomain
-import com.pal.rickandmorty.data.network.model.toDomainFailure
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import com.pal.rickandmorty.data.network.CharacterPagingSource
 import javax.inject.Inject
 
 class GetListOfCharactersUseCase @Inject constructor(
-    private val networkDataSource: NetworkDataSource
+    private val characterPagingSource: CharacterPagingSource
 ) {
+    companion object {
+        const val MAX_ITEMS = 10
+        const val PREFETCH_ITEMS = 5
+    }
 
-    suspend operator fun invoke(page: Int): Result<List<Character>> {
-        return networkDataSource.getCharacters(page).fold(
-            onSuccess = { characters ->
-                Result.success(characters.map(CharacterDTO::toDomain))
-            },
-            onFailure = { throwable ->
-                Result.failure(
-                    (throwable as? ApiFailure)?.toDomainFailure() ?: AppFailure.UnknownError()
-                )
-            }
-        )
+    operator fun invoke(): Pager<Int, Character> {
+        return Pager(config = PagingConfig(pageSize = MAX_ITEMS, prefetchDistance = PREFETCH_ITEMS),
+            pagingSourceFactory = { characterPagingSource })
     }
 }
 

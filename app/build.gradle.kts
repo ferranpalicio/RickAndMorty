@@ -51,21 +51,18 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.retrofit)
     implementation(libs.okHttp.logging)
-
     implementation(libs.moshi)
     implementation(libs.moshi.converter)
     ksp(libs.moshiKotlinCodegen)//https://developer.android.com/build/migrate-to-ksp
-
     implementation(libs.coil.compose)
     implementation(libs.coil.okttp)
-
     implementation(libs.androidx.navigation)
+    implementation(libs.androidx.paging.compose)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

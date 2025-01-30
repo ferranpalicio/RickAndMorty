@@ -3,7 +3,6 @@ package com.pal.rickandmorty.data.di
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import com.pal.rickandmorty.data.network.BASE_URL
-import com.pal.rickandmorty.data.network.ResultCallAdapterFactory
 import com.pal.rickandmorty.data.network.RickAndMortyApi
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -56,7 +55,6 @@ class NetworkModule {
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .addCallAdapterFactory(ResultCallAdapterFactory())
             .client(okHttpClient)
             .build()
     }
