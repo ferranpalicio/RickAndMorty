@@ -1,11 +1,8 @@
 package com.pal.rickandmorty
 
-enum class Screen {
-    LIST,
-    DETAIL,
-}
+const val DETAIL_ID_PARAM = "id"
 
 sealed class NavigationItem(val route: String) {
-    data object List : NavigationItem(Screen.LIST.name)
-    data object Detail : NavigationItem(Screen.DETAIL.name)
+    data object List : NavigationItem("list")
+    data object Detail : NavigationItem("detail/{$DETAIL_ID_PARAM}")
 }

@@ -1,6 +1,8 @@
 package com.pal.rickandmorty.ui
 
+import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -24,7 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.ImageLoader
 import coil3.compose.AsyncImage
 import coil3.imageLoader
@@ -32,42 +34,43 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.util.DebugLogger
 import com.pal.rickandmorty.R
+import com.pal.rickandmorty.domain.Character
 
 @Composable
 fun ListOfCharacters(
-    navController: NavHostController,
-    viewModel: MainViewModel = hiltViewModel()
+    listScreenState: ListScreenState,
+    onCharacterClick: (Int) -> Unit
 ) {
-    val listScreenStateState = viewModel.listState.collectAsState()
-
-    LaunchedEffect(Unit) {
-        viewModel.getCharacters(1)
-    }
-
-    if (listScreenStateState.value.isLoading) {
+    Log.i("TAG", "ListOfCharacters")
+    if (listScreenState.isLoading) {
         Text(text = "Loading...")
-    } else if (listScreenStateState.value.isError) {
+    } else if (listScreenState.isError) {
         Text(text = "Error")
     } else {
         val imageLoader = LocalContext.current.imageLoader.newBuilder()
             .logger(DebugLogger())
             .build()
 
-        val items = listScreenStateState.value.characters
+        val items = listScreenState.characters
         LazyColumn {
             items(
                 count = items.size,
                 key = { items[it].id }) { index ->
-                CharacterItem(items[index], imageLoader)
+                CharacterItem(items[index], imageLoader, onCharacterClick)
             }
         }
     }
 }
 
 @Composable
-fun CharacterItem(character: CharacterItem, imageLoader: ImageLoader?) {
+fun CharacterItem(
+    character: Character,
+    imageLoader: ImageLoader?,
+    onCharacterClick: (Int) -> Unit
+) {
     Row(
         modifier = Modifier
+            .clickable { onCharacterClick(character.id) }
             .height(IntrinsicSize.Min)
             .fillMaxWidth()
             .padding(16.dp)
@@ -93,7 +96,7 @@ fun CharacterItem(character: CharacterItem, imageLoader: ImageLoader?) {
                 .background(Color.White)
         ) {
             Text(text = character.name)
-            Text(text = character.subtitle)
+            Text(text = "${character.type} - ${character.type} - ${character.location}")
         }
     }
 }
@@ -102,11 +105,10 @@ fun CharacterItem(character: CharacterItem, imageLoader: ImageLoader?) {
 @Composable
 fun PreviewCharacterItem() {
     CharacterItem(
-        character = CharacterItem(
+        character = Character(
             id = 1,
             name = "Rick",
-            image = "https://rickandmortyapi.com/api/character/avatar/1.jpeg",
-            subtitle = "Alive - Human - Scientist"
+            image = "https://rickandmortyapi.com/api/character/avatar/1.jpeg"
         ), null
-    )
+    ) {}
 }

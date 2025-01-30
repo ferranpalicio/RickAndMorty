@@ -1,13 +1,14 @@
 package com.pal.rickandmorty.domain
 
+//todo map some fields from string to classes
 data class Character(
     val id: Int,
     val name: String,
-    val status: String,
-    val species: String,
-    val type: String,
+    val status: String = "Alive",
+    val species: String = "Humanoid",
+    val type: String = "Rick's Toxic",
     val image: String,
-    val location: String
+    val location: String = "Earth",
 )
 
 /**
