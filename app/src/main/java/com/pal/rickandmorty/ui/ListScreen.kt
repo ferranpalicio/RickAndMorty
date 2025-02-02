@@ -1,10 +1,13 @@
 package com.pal.rickandmorty.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,16 +16,34 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
@@ -35,6 +56,8 @@ import coil3.request.crossfade
 import coil3.util.DebugLogger
 import com.pal.rickandmorty.R
 import com.pal.rickandmorty.domain.Character
+import com.pal.rickandmorty.domain.Status
+import com.pal.rickandmorty.useDebounce
 import java.net.UnknownHostException
 
 @Composable
@@ -101,6 +124,91 @@ fun ListOfCharacters(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchBar(
+    modifier: Modifier = Modifier,
+    hint: String = "Search a character",
+    onSearch: (String) -> Unit = {}
+) {
+    // 1. text field state
+    var textFieldValue by remember {
+        mutableStateOf(TextFieldValue())
+    }
+
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+
+
+    // 2. debouncing
+    textFieldValue.useDebounce {
+        onSearch(it.text)
+    }
+
+    var isHintDisplayed by remember {
+        mutableStateOf(true)
+    }
+
+    Box(modifier = modifier) {
+        BasicTextField(
+            value = textFieldValue,
+            onValueChange = {
+                textFieldValue = it
+            },
+            decorationBox = { innerTextField ->
+                TextFieldDefaults.DecorationBox(
+                    leadingIcon = {
+                        if (isHintDisplayed) {
+                            Icon(
+                                imageVector = Icons.Filled.Search,
+                                contentDescription = "search"
+                            )
+                        }
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
+                    ),
+                    value = textFieldValue.text,
+                    innerTextField = {
+                        if (isHintDisplayed) {
+                            Text(hint)
+                        }
+                        innerTextField()
+                    },
+                    enabled = true,
+                    singleLine = true,
+                    visualTransformation = VisualTransformation.None,
+                    interactionSource = remember { MutableInteractionSource() },
+                    trailingIcon = {
+                        Icon(imageVector = Icons.Filled.Close,
+                            contentDescription = "search",
+                            modifier = Modifier.clickable {
+                                textFieldValue = TextFieldValue("")
+                                focusManager.clearFocus()
+                            })
+                    },
+                    contentPadding = PaddingValues(0.dp),
+                )
+            },
+            maxLines = 1,
+            singleLine = true,
+            textStyle = TextStyle(color = Color.Black),
+            modifier = Modifier
+                .fillMaxWidth()
+                //.shadow(5.dp, CircleShape)
+                .background(Color.White)
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .focusRequester(focusRequester)
+                .onFocusChanged {
+                    isHintDisplayed = !it.isFocused
+                }
+        )
+    }
+}
+
 @Composable
 fun CharacterItem(
     character: Character,
@@ -110,9 +218,15 @@ fun CharacterItem(
     Row(
         modifier = modifier
             .height(IntrinsicSize.Min)
+            .background(Color.White)
             .fillMaxWidth()
             .padding(16.dp)
     ) {
+        val borderColor = when (character.status) {
+            Status.Alive -> Color.Green
+            Status.Dead -> Color.Red
+            else -> Color.Gray
+        }
         AsyncImage(
             imageLoader = imageLoader ?: LocalContext.current.imageLoader,
             model = ImageRequest.Builder(LocalContext.current)
@@ -122,7 +236,8 @@ fun CharacterItem(
             placeholder = painterResource(R.drawable.item_placeholder),
             modifier = Modifier
                 .size(64.dp)
-                .clip(CircleShape),
+                .clip(CircleShape)
+                .border(2.dp, borderColor, CircleShape),
             contentScale = ContentScale.Crop,
             contentDescription = null
         )
@@ -131,7 +246,7 @@ fun CharacterItem(
             modifier = Modifier
                 .align(Alignment.CenterVertically)
                 .weight(1f)
-                .background(Color.White)
+
         ) {
             Text(text = character.name)
             Text(text = "${character.type} - ${character.type} - ${character.location}")

@@ -1,6 +1,8 @@
 package com.pal.rickandmorty.data.network.model
 
 import com.pal.rickandmorty.domain.Character
+import com.pal.rickandmorty.domain.Gender
+import com.pal.rickandmorty.domain.Status
 
 class CharacterDTO(
     val id: Int,
@@ -9,7 +11,8 @@ class CharacterDTO(
     val species: String,
     val type: String,
     val image: String,
-    val location: LocationDTO
+    val location: LocationDTO,
+    val gender: String
 )
 
 class LocationDTO(val name: String)
@@ -17,21 +20,35 @@ class LocationDTO(val name: String)
 fun CharacterDTO.toDomain() = Character(
     id = id,
     name = name,
-    status = status,
+    status = toStatus(status),
     species = species,
     type = type,
     image = image,
+    gender = toGender(gender),
     location = location.name
 )
+
+private fun toGender(gender: String) = when (gender) {
+    "Female" -> Gender.Female
+    "Male" -> Gender.Male
+    "Genderless" -> Gender.Genderless
+    else -> Gender.Unknown
+}
+
+private fun toStatus(status: String) = when (status) {
+    "Alive" -> Status.Alive
+    "Dead" -> Status.Dead
+    else -> Status.Unknown
+}
 
 /**
  *  {
  *       "id": 361,
  *       "name": "Toxic Rick",
- *       "status": "Dead",
+ *       "status": "Dead", //'Alive', 'Dead' or 'unknown'
  *       "species": "Humanoid",
  *       "type": "Rick's Toxic Side",
- *       "gender": "Male",
+ *       "gender": "Male", //'Female', 'Male', 'Genderless' or 'unknown'
  *       "origin": {
  *         "name": "Alien Spa",
  *         "url": "https://rickandmortyapi.com/api/location/64"

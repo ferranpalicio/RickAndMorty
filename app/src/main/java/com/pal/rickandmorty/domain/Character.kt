@@ -1,15 +1,28 @@
 package com.pal.rickandmorty.domain
 
-//todo map some fields from string to classes
 data class Character(
     val id: Int,
     val name: String,
-    val status: String = "Alive",
+    val status: Status = Status.Unknown,
     val species: String = "Humanoid",
     val type: String = "Rick's Toxic",
     val image: String,
     val location: String = "Earth",
+    val gender: Gender = Gender.Unknown
 )
+
+sealed class Status {
+    data object Alive : Status()
+    data object Dead : Status()
+    data object Unknown : Status()
+}
+
+sealed class Gender {
+    data object Male : Gender()
+    data object Female : Gender()
+    data object Genderless : Gender()
+    data object Unknown : Gender()
+}
 
 /**
  *  {
