@@ -24,6 +24,15 @@ sealed class Gender {
     data object Unknown : Gender()
 }
 
+fun Gender.getStringRepresentation(): String {
+    return when(this) {
+        is Gender.Male -> "♂"
+        Gender.Female -> "♀"
+        Gender.Genderless -> "⚧"
+        Gender.Unknown -> "❓"
+    }
+}
+
 /**
  *  {
  *       "id": 361,

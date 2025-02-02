@@ -5,12 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -39,6 +40,7 @@ import com.pal.rickandmorty.ui.ListOfCharacters
 import com.pal.rickandmorty.ui.MainViewModel
 import com.pal.rickandmorty.ui.SearchBar
 import com.pal.rickandmorty.ui.theme.RickAndMortyTheme
+import com.pal.rickandmorty.ui.theme.spacing
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -52,41 +54,44 @@ class MainActivity : ComponentActivity() {
         setContent {
             RickAndMortyTheme {
 
-                val navController = rememberNavController()
                 val viewModel: MainViewModel = hiltViewModel()
 
                 val characters: LazyPagingItems<Character> =
                     viewModel.characters.collectAsLazyPagingItems()
+
                 val characterTitleSelected = viewModel.characterSelectedTitle.collectAsState()
 
                 Scaffold(
                     modifier = Modifier.safeDrawingPadding(),
                     topBar = {
-                        if (navController.currentDestination?.route == NavigationItem.List.route) {
-                            SearchBar(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                hint = "Search a character"
-                            ) {
-                                viewModel.queryFlow.tryEmit(it.trim())
-                            }
-                        } else {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(Color.White)
-                                    .padding(16.dp)
-                            ) {
-                                Text(
-                                    text = characterTitleSelected.value,
-                                    fontSize = 20.sp,
-                                    color = Color.Black,
-                                    modifier = Modifier.align(Alignment.CenterVertically)
-                                )
+                        Surface(shadowElevation = 3.dp) {
+                            if (characterTitleSelected.value.isEmpty()) {
+                                SearchBar(
+                                    modifier = Modifier
+                                        .fillMaxWidth(),
+                                    hint = "Search a character"
+                                ) {
+                                    viewModel.queryFlow.tryEmit(it.trim())
+                                }
+                            } else {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(Color.White)
+                                        .padding(MaterialTheme.spacing.medium)
+                                ) {
+                                    Text(
+                                        text = characterTitleSelected.value,
+                                        fontSize = 20.sp,
+                                        color = Color.Black,
+                                        modifier = Modifier.align(Alignment.CenterVertically)
+                                    )
+                                }
                             }
                         }
                     }
                 ) { innerPadding ->
+                    val navController = rememberNavController()
                     NavHost(
                         navController,
                         startDestination = NavigationItem.List.route,

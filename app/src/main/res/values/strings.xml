@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">RickAndMorty</string>
+    <string name="character_type">Type: %s</string>
+    <string name="character_location">Location: %s</string>
+    <string name="generic_error">Something went wrong :(\n</string>
+    <string name="connection_error">Check your connectivity\n</string>
+    <string name="no_data_found">No data found</string>
+    <string name="species">Specie: %s</string>
+    <string name="gender">Gender: %s</string>
 </resources>
