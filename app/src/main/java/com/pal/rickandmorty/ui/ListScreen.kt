@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -65,9 +66,11 @@ import com.pal.rickandmorty.domain.getStringRepresentation
 import com.pal.rickandmorty.ui.theme.RickAndMortyTheme
 import com.pal.rickandmorty.ui.theme.cardBackground
 import com.pal.rickandmorty.ui.theme.spacing
-import com.pal.rickandmorty.useDebounce
+import com.pal.rickandmorty.utils.useDebounce
 import kotlinx.coroutines.flow.flowOf
 import java.net.UnknownHostException
+
+const val LIST_TEST_TAG = "listOfCharacters"
 
 @Composable
 fun ListOfCharacters(
@@ -80,36 +83,18 @@ fun ListOfCharacters(
     when {
         //Initial load
         characters.loadState.refresh is LoadState.Loading && characters.itemCount == 0 -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(64.dp), color = Color.White
-                )
-            }
+            CharactersLoadingView()
         }
 
         //Empty list
         characters.loadState.refresh is LoadState.NotLoading && characters.itemCount == 0 -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = stringResource(R.string.no_data_found),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
+            CharactersEmptyView()
         }
+
 
         //error
         characters.loadState.append is LoadState.Error -> {
-            Box(
-                Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-            ) {
-                val e = characters.loadState.refresh as LoadState.Error
-                val message = if (e.error is UnknownHostException) {
-                    stringResource(R.string.connection_error)
-                } else {
-                    e.error.localizedMessage ?: stringResource(R.string.generic_error)
-                }
-                Text(text = message)
-            }
+            CharactersErrorView(characters)
         }
 
         else -> {
@@ -118,6 +103,7 @@ fun ListOfCharacters(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxSize()
+                    .testTag(LIST_TEST_TAG)
             ) {
                 items(characters.itemCount) { index ->
 
@@ -136,13 +122,43 @@ fun ListOfCharacters(
             }
 
             if (characters.loadState.append is LoadState.Loading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(64.dp), color = Color.White
-                    )
-                }
+                CharactersLoadingView()
             }
         }
+    }
+}
+
+@Composable
+private fun CharactersLoadingView() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(64.dp), color = Color.White
+        )
+    }
+}
+
+@Composable
+private fun CharactersEmptyView() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(
+            text = stringResource(R.string.no_data_found),
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@Composable
+private fun CharactersErrorView(characters: LazyPagingItems<Character>) {
+    Box(
+        Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+    ) {
+        val e = characters.loadState.refresh as LoadState.Error
+        val message = if (e.error is UnknownHostException) {
+            stringResource(R.string.connection_error)
+        } else {
+            e.error.localizedMessage ?: stringResource(R.string.generic_error)
+        }
+        Text(text = message)
     }
 }
 
@@ -150,7 +166,7 @@ fun ListOfCharacters(
 @Composable
 fun SearchBar(
     modifier: Modifier = Modifier,
-    hint: String = "Search a character",
+    hint: String,
     onSearch: (String) -> Unit = {}
 ) {
     // 1. text field state
@@ -160,7 +176,6 @@ fun SearchBar(
 
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
-
 
     // 2. debouncing
     textFieldValue.useDebounce {
@@ -196,7 +211,7 @@ fun SearchBar(
                     value = textFieldValue.text,
                     innerTextField = {
                         if (isHintDisplayed) {
-                            Text(hint)
+                            Text(text = hint, maxLines = 1)
                         }
                         innerTextField()
                     },
@@ -222,7 +237,6 @@ fun SearchBar(
             textStyle = TextStyle(color = Color.Black),
             modifier = Modifier
                 .fillMaxWidth()
-                //.shadow(5.dp, CircleShape)
                 .background(Color.White)
                 .padding(horizontal = 20.dp, vertical = 12.dp)
                 .focusRequester(focusRequester)

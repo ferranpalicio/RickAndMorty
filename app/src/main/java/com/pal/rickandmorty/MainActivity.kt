@@ -1,7 +1,6 @@
 package com.pal.rickandmorty
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -15,18 +14,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -37,15 +36,15 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.pal.rickandmorty.domain.AppFailure
 import com.pal.rickandmorty.domain.Character
 import com.pal.rickandmorty.ui.CharacterDetail
+import com.pal.rickandmorty.ui.CharacterToolbar
 import com.pal.rickandmorty.ui.ListOfCharacters
 import com.pal.rickandmorty.ui.MainViewModel
 import com.pal.rickandmorty.ui.SearchBar
 import com.pal.rickandmorty.ui.theme.RickAndMortyTheme
 import com.pal.rickandmorty.ui.theme.spacing
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+
+const val SEARCH_BAR_TEST_TAG = "searchBar"
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -56,112 +55,82 @@ class MainActivity : ComponentActivity() {
             RickAndMortyTheme {
 
                 val viewModel: MainViewModel = hiltViewModel()
-
                 val navController = rememberNavController()
-                val characters: LazyPagingItems<Character> =
-                    viewModel.characters.collectAsLazyPagingItems()
-
                 val characterSelectedState =
                     viewModel.characterSelectedTitle.collectAsStateWithLifecycle()
 
-                Scaffold(
-                    modifier = Modifier.safeDrawingPadding(),
-                    topBar = {
-                        Surface(shadowElevation = 3.dp) {
-                            if (characterSelectedState.value.isNullOrBlank()) {
-                                SearchBar(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    hint = "Search a character"
-                                ) {
-                                    viewModel.queryFlow.tryEmit(it.trim())
-                                }
-                            } else {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(Color.White)
-                                        .padding(MaterialTheme.spacing.medium)
-                                ) {
-                                    Text(
-                                        text = characterSelectedState.value ?: "",
-                                        fontSize = 20.sp,
-                                        color = Color.Black,
-                                        modifier = Modifier.align(Alignment.CenterVertically)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                ) { innerPadding ->
-                    NavHost(
-                        navController,
-                        startDestination = NavigationItem.List.route,
-                        modifier = Modifier.padding(innerPadding)
-                    ) {
-                        composable(NavigationItem.List.route) {
-                            ListOfCharacters(
-                                characters = characters
-                            ) { index ->
-                                val route = NavigationItem.Detail.route.replace(
-                                    "{$DETAIL_POS_PARAM}",
-                                    index.toString()
-                                )
-                                viewModel.characterSelectedTitle.tryEmit(characters[index]?.name)
-                                navController.navigate(route)
-                            }
-                        }
-                        composable(
-                            NavigationItem.Detail.route,
-                            arguments = listOf(navArgument(DETAIL_POS_PARAM) {
-                                type = NavType.IntType
-                            })
-                        ) {
-                            val pos = it.arguments?.getInt(DETAIL_POS_PARAM, -1) ?: -1
-                            val characterResult = if (pos >= 0) {
-                                val character = characters.itemSnapshotList.items[pos]
-                                Result.success(character)
-                            } else {
-                                Result.failure(AppFailure.LocalAppFailure.NoDataError())
-                            }
-
-                            CharacterDetail(characterResult = characterResult) {
-                                viewModel.characterSelectedTitle.tryEmit(null)
-                                navController.popBackStack()
-                            }
-                        }
-                    }
-                }
+                MainContent(
+                    characterSelectedState,
+                    viewModel,
+                    navController,
+                    viewModel.characters.collectAsLazyPagingItems()
+                )
             }
         }
     }
-
-}
-
-@Preview
-@Composable
-fun PreviewSearchBar() {
-    RickAndMortyTheme {
-        SearchBar()
-    }
 }
 
 @Composable
-fun <T> T.useDebounce(
-    delayMillis: Long = 300L,
-    coroutineScope: CoroutineScope = rememberCoroutineScope(),
-    onChange: (T) -> Unit
-): T {
-    val state by rememberUpdatedState(this)
-
-    DisposableEffect(state) {
-        val job = coroutineScope.launch {
-            delay(delayMillis)
-            onChange(state)
+fun MainContent(
+    characterSelectedState: State<String?>,
+    viewModel: MainViewModel,
+    navController: NavHostController,
+    characters: LazyPagingItems<Character>
+) {
+    Scaffold(
+        modifier = Modifier.safeDrawingPadding(),
+        topBar = {
+            Surface(shadowElevation = 3.dp) {
+                if (characterSelectedState.value.isNullOrBlank()) {
+                    SearchBar(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(SEARCH_BAR_TEST_TAG),
+                        hint = stringResource(R.string.search_hint)
+                    ) {
+                        viewModel.queryFlow.tryEmit(it.trim())
+                    }
+                } else {
+                    CharacterToolbar(characterSelectedState)
+                }
+            }
         }
-        onDispose {
-            job.cancel()
+    ) { innerPadding ->
+        NavHost(
+            navController,
+            startDestination = NavigationItem.List.route,
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable(NavigationItem.List.route) {
+                ListOfCharacters(characters = characters) { index ->
+                    val route = NavigationItem.Detail.route.replace(
+                        "{$DETAIL_POS_PARAM}",
+                        index.toString()
+                    )
+                    viewModel.characterSelectedTitle.tryEmit(characters[index]?.name)
+                    navController.navigate(route)
+                }
+            }
+            composable(
+                NavigationItem.Detail.route,
+                arguments = listOf(navArgument(DETAIL_POS_PARAM) {
+                    type = NavType.IntType
+                })
+            ) {
+                val pos = it.arguments?.getInt(DETAIL_POS_PARAM, -1) ?: -1
+                val characterResult = if (pos >= 0) {
+                    Result.success(characters.itemSnapshotList.items[pos])
+                } else {
+                    Result.failure(AppFailure.LocalAppFailure.NoDataError())
+                }
+
+                CharacterDetail(characterResult = characterResult,
+                    onGoBack = {
+                        viewModel.characterSelectedTitle.tryEmit(null)
+                        navController.popBackStack()
+                    }
+                )
+            }
         }
     }
-    return state
 }

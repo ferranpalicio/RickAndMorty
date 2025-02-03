@@ -7,4 +7,5 @@
     <string name="no_data_found">No data found</string>
     <string name="species">Specie: %s</string>
     <string name="gender">Gender: %s</string>
+    <string name="search_hint">Search a character</string>
 </resources>

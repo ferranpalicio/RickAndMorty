@@ -31,6 +31,7 @@ class CharacterPagingSource @Inject constructor(
                 nextKey = nextKey
             )
         } catch (exception: IOException) {
+            //todo map to app domain errors
             LoadResult.Error(exception)
         }
     }
