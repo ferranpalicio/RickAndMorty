@@ -103,5 +103,4 @@ class CharacterPagingSourceTest {
             sut.load(PagingSource.LoadParams.Append(1, 1, false))
         )
     }
-
 }

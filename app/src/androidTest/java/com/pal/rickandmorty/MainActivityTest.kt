@@ -39,6 +39,7 @@ class MainActivityTest {
     @get:Rule
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
+    @SuppressWarnings("LongMethod")
     private fun mockListOfCharactersDTO(): List<CharacterDTO> = listOf(
         CharacterDTO(
             id = 1,
@@ -182,5 +183,4 @@ class MainActivityTest {
         val viewModel = MainViewModel(mockGetListOfCharactersUseCase)
         return Pair(navController, viewModel)
     }
-
 }

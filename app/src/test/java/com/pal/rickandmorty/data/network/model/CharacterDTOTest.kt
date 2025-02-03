@@ -21,6 +21,7 @@ const val STATUS_ALIVE: String = "Alive"
 const val STATUS_DEAD: String = "Dead"
 const val STATUS_UNKNOWN: String = "who knows"
 
+@SuppressWarnings("LongParameterList", "UnusedPrivateProperty")
 @RunWith(Parameterized::class)
 class CharacterDTOTest(
     private val status: String,
