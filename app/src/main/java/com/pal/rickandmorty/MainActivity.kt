@@ -1,6 +1,7 @@
 package com.pal.rickandmorty
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -15,7 +16,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -56,16 +57,18 @@ class MainActivity : ComponentActivity() {
 
                 val viewModel: MainViewModel = hiltViewModel()
 
+                val navController = rememberNavController()
                 val characters: LazyPagingItems<Character> =
                     viewModel.characters.collectAsLazyPagingItems()
 
-                val characterTitleSelected = viewModel.characterSelectedTitle.collectAsState()
+                val characterSelectedState =
+                    viewModel.characterSelectedTitle.collectAsStateWithLifecycle()
 
                 Scaffold(
                     modifier = Modifier.safeDrawingPadding(),
                     topBar = {
                         Surface(shadowElevation = 3.dp) {
-                            if (characterTitleSelected.value.isEmpty()) {
+                            if (characterSelectedState.value.isNullOrBlank()) {
                                 SearchBar(
                                     modifier = Modifier
                                         .fillMaxWidth(),
@@ -81,7 +84,7 @@ class MainActivity : ComponentActivity() {
                                         .padding(MaterialTheme.spacing.medium)
                                 ) {
                                     Text(
-                                        text = characterTitleSelected.value,
+                                        text = characterSelectedState.value ?: "",
                                         fontSize = 20.sp,
                                         color = Color.Black,
                                         modifier = Modifier.align(Alignment.CenterVertically)
@@ -91,7 +94,6 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) { innerPadding ->
-                    val navController = rememberNavController()
                     NavHost(
                         navController,
                         startDestination = NavigationItem.List.route,
@@ -105,6 +107,7 @@ class MainActivity : ComponentActivity() {
                                     "{$DETAIL_POS_PARAM}",
                                     index.toString()
                                 )
+                                viewModel.characterSelectedTitle.tryEmit(characters[index]?.name)
                                 navController.navigate(route)
                             }
                         }
@@ -117,13 +120,15 @@ class MainActivity : ComponentActivity() {
                             val pos = it.arguments?.getInt(DETAIL_POS_PARAM, -1) ?: -1
                             val characterResult = if (pos >= 0) {
                                 val character = characters.itemSnapshotList.items[pos]
-                                viewModel.characterSelectedTitle.tryEmit(character.name)
                                 Result.success(character)
                             } else {
                                 Result.failure(AppFailure.LocalAppFailure.NoDataError())
                             }
 
-                            CharacterDetail(characterResult = characterResult)
+                            CharacterDetail(characterResult = characterResult) {
+                                viewModel.characterSelectedTitle.tryEmit(null)
+                                navController.popBackStack()
+                            }
                         }
                     }
                 }

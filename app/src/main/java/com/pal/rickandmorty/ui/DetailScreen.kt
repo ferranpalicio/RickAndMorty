@@ -1,5 +1,6 @@
 package com.pal.rickandmorty.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,8 +25,13 @@ import com.pal.rickandmorty.ui.theme.spacing
 
 @Composable
 fun CharacterDetail(
-    characterResult: Result<Character>
+    characterResult: Result<Character>,
+    onGoBack: () -> Unit
 ) {
+
+    BackHandler {
+        onGoBack()
+    }
 
     characterResult.fold(
         onSuccess = { character ->

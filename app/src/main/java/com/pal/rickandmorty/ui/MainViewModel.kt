@@ -18,7 +18,7 @@ class MainViewModel @Inject constructor(
     getListOfCharactersUseCase: GetListOfCharactersUseCase
 ) : ViewModel() {
 
-    val characterSelectedTitle = MutableStateFlow("")
+    val characterSelectedTitle = MutableStateFlow<String?>(null)
 
     val queryFlow = MutableStateFlow("")
 
