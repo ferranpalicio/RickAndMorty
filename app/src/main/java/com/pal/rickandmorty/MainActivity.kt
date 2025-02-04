@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
@@ -93,7 +94,10 @@ fun MainContent(
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(NavigationItem.List.route) {
-                ListOfCharacters(characters = characters) { index ->
+                ListOfCharacters(
+                    modifier = Modifier.fillMaxSize(),
+                    characters = characters
+                ) { index ->
                     val route = NavigationItem.Detail.route.replace(
                         "{$DETAIL_POS_PARAM}",
                         index.toString()

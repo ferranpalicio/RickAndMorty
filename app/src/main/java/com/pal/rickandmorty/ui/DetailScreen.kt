@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +29,7 @@ import com.pal.rickandmorty.R
 import com.pal.rickandmorty.domain.Character
 import com.pal.rickandmorty.domain.getStringRepresentation
 import com.pal.rickandmorty.ui.theme.spacing
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun CharacterDetail(
@@ -114,14 +116,17 @@ fun CharacterToolbar(characterSelectedState: State<String?>) {
 @Preview(showBackground = true)
 @Composable
 fun CharacterDetailPreview() {
-    CharacterDetail(
-        characterResult = Result.success(
-            Character(
-                id = 1,
-                name = "Rick",
-                image = "https://rickandmortyapi.com/api/character/avatar/1.jpeg"
-            )
-        ),
-        onGoBack = {}
-    )
+    Column {
+        CharacterToolbar(characterSelectedState = MutableStateFlow("Rick").collectAsState())
+        CharacterDetail(
+            characterResult = Result.success(
+                Character(
+                    id = 1,
+                    name = "Rick",
+                    image = "https://rickandmortyapi.com/api/character/avatar/1.jpeg"
+                )
+            ),
+            onGoBack = {}
+        )
+    }
 }

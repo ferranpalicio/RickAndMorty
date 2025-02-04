@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -74,6 +73,7 @@ const val LIST_TEST_TAG = "listOfCharacters"
 
 @Composable
 fun ListOfCharacters(
+    modifier: Modifier = Modifier,
     characters: LazyPagingItems<Character>,
     onCharacterClick: (Int) -> Unit
 ) {
@@ -83,26 +83,25 @@ fun ListOfCharacters(
     when {
         //Initial load
         characters.loadState.refresh is LoadState.Loading && characters.itemCount == 0 -> {
-            CharactersLoadingView()
+            CharactersLoadingView(modifier)
         }
 
         //Empty list
         characters.loadState.refresh is LoadState.NotLoading && characters.itemCount == 0 -> {
-            CharactersEmptyView()
+            CharactersEmptyView(modifier)
         }
 
 
         //error
         characters.loadState.append is LoadState.Error -> {
-            CharactersErrorView(characters)
+            CharactersErrorView(modifier, characters)
         }
 
         else -> {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = modifier
                     .testTag(LIST_TEST_TAG)
             ) {
                 items(characters.itemCount) { index ->
@@ -129,17 +128,18 @@ fun ListOfCharacters(
 }
 
 @Composable
-private fun CharactersLoadingView() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+private fun CharactersLoadingView(modifier: Modifier = Modifier, progress: Float = 0.1f) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
         CircularProgressIndicator(
-            modifier = Modifier.size(64.dp), color = Color.White
+            modifier = Modifier.size(64.dp), color = MaterialTheme.colorScheme.primary,
+            progress = { progress }
         )
     }
 }
 
 @Composable
-private fun CharactersEmptyView() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+private fun CharactersEmptyView(modifier: Modifier = Modifier) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Text(
             text = stringResource(R.string.no_data_found),
             style = MaterialTheme.typography.bodyMedium
@@ -148,10 +148,11 @@ private fun CharactersEmptyView() {
 }
 
 @Composable
-private fun CharactersErrorView(characters: LazyPagingItems<Character>) {
-    Box(
-        Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-    ) {
+private fun CharactersErrorView(
+    modifier: Modifier = Modifier,
+    characters: LazyPagingItems<Character>
+) {
+    Box(modifier, contentAlignment = Alignment.Center) {
         val e = characters.loadState.refresh as LoadState.Error
         val message = if (e.error is UnknownHostException) {
             stringResource(R.string.connection_error)
@@ -312,39 +313,47 @@ fun CharacterItem(
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun PreviewCharacterList() {
     RickAndMortyTheme {
-        ListOfCharacters(
-            characters = flowOf(
-                PagingData.from(
-                    listOf(
-                        Character(
-                            id = 1,
-                            name = "Rick",
-                            type = "Human",
-                            image = "https://rickandmortyapi.com/api/character/avatar/1.jpeg",
-                            location = "Earth (Replacement Dimension)",
-                        ),
-                        Character(
-                            id = 2,
-                            name = "Morty",
-                            type = "Human",
-                            image = "https://rickandmortyapi.com/api/character/avatar/2.jpeg",
-                            location = "Earth (Replacement Dimension)",
-                        ),
-                        Character(
-                            id = 3,
-                            name = "Summer",
-                            type = "Human",
-                            image = "https://rickandmortyapi.com/api/character/avatar/3.jpeg",
-                            location = "Earth (Replacement Dimension)",
+        Column {
+            ListOfCharacters(
+                characters = flowOf(
+                    PagingData.from(
+                        listOf(
+                            Character(
+                                id = 1,
+                                name = "Rick",
+                                type = "Human",
+                                image = "https://rickandmortyapi.com/api/character/avatar/1.jpeg",
+                                location = "Earth (Replacement Dimension)",
+                            ),
+                            Character(
+                                id = 2,
+                                name = "Morty",
+                                type = "Human",
+                                image = "https://rickandmortyapi.com/api/character/avatar/2.jpeg",
+                                location = "Earth (Replacement Dimension)",
+                            ),
+                            Character(
+                                id = 3,
+                                name = "Summer",
+                                type = "Human",
+                                image = "https://rickandmortyapi.com/api/character/avatar/3.jpeg",
+                                location = "Earth (Replacement Dimension)",
+                            )
                         )
                     )
-                )
-            ).collectAsLazyPagingItems(),
-            onCharacterClick = {}
-        )
+                ).collectAsLazyPagingItems(),
+                onCharacterClick = {}
+            )
+
+            val modifier = Modifier
+                .fillMaxWidth()
+                .padding(MaterialTheme.spacing.medium)
+            CharactersLoadingView(modifier, 0.5f)
+            CharactersEmptyView(modifier)
+        }
     }
 }
