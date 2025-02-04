@@ -13,9 +13,9 @@ class GetListOfCharactersUseCase @Inject constructor(
         const val PREFETCH_ITEMS = 5
     }
 
-    operator fun invoke(): Pager<Int, Character> {
+    operator fun invoke(query: String): Pager<Int, Character> {
         return Pager(config = PagingConfig(pageSize = MAX_ITEMS, prefetchDistance = PREFETCH_ITEMS),
-            pagingSourceFactory = { characterPagingSource })
+            pagingSourceFactory = { characterPagingSource.apply { withQuery(query) } })
     }
 }
 

@@ -8,11 +8,14 @@ import androidx.paging.filter
 import com.pal.rickandmorty.domain.Character
 import com.pal.rickandmorty.domain.GetListOfCharactersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class MainViewModel @Inject constructor(
     getListOfCharactersUseCase: GetListOfCharactersUseCase
@@ -23,13 +26,9 @@ class MainViewModel @Inject constructor(
     val queryFlow = MutableStateFlow("")
 
     val characters: Flow<PagingData<Character>> =
-        getListOfCharactersUseCase.invoke()
-            .flow
-            .cachedIn(viewModelScope)
-            .combine(queryFlow) { pagingData, query ->
-                if (query.isEmpty()) {
-                    return@combine pagingData
-                }
-                pagingData.filter { it.name.contains(query, ignoreCase = true) }
-            }
+        queryFlow.flatMapLatest {
+            getListOfCharactersUseCase.invoke(it)
+                .flow
+                .cachedIn(viewModelScope)
+        }
 }

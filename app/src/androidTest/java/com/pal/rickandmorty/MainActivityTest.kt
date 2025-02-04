@@ -176,7 +176,7 @@ class MainActivityTest {
 
         val mockGetListOfCharactersUseCase: GetListOfCharactersUseCase = mockk()
 
-        coEvery { mockGetListOfCharactersUseCase.invoke() } returns Pager(
+        coEvery { mockGetListOfCharactersUseCase.invoke("") } returns Pager(
             PagingConfig(pageSize = 1), 1, pagingSourceFactory = source
         )
 

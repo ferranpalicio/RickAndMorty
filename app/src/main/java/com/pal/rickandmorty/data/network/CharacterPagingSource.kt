@@ -12,6 +12,11 @@ class CharacterPagingSource @Inject constructor(
     private val api: RickAndMortyApi
 ) : PagingSource<Int, Character>() {
 
+    private var query = ""
+    fun withQuery(query: String) {
+        this.query = query
+    }
+
     override fun getRefreshKey(state: PagingState<Int, Character>): Int? {
         return state.anchorPosition
     }
@@ -19,7 +24,7 @@ class CharacterPagingSource @Inject constructor(
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Character> {
         return try {
             val page = params.key ?: 1
-            val response = api.getCharacters(page)
+            val response = api.getCharacters(query, page)
             val characters = response.results
 
             val prevKey = if (page > 0) page - 1 else null

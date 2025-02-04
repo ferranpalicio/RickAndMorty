@@ -14,17 +14,23 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import retrofit2.http.Query
 import com.pal.rickandmorty.domain.Character as Character
 
 class MainViewModelTest {
     private val mockGetListOfCharactersUseCase: GetListOfCharactersUseCase = mockk()
     private lateinit var sut: MainViewModel
 
-    private fun mockPageResponse(initialKey: Int) =
-        coEvery { mockGetListOfCharactersUseCase.invoke() } returns Pager(
+    private fun mockPageResponse(initialKey: Int, query: String = "") =
+        coEvery { mockGetListOfCharactersUseCase.invoke(query) } returns Pager(
             PagingConfig(pageSize = 1),
             initialKey,
-            pagingSourceFactory = mockListOfCharactersDTO().map { it.toDomain() }
+            pagingSourceFactory = mockListOfCharactersDTO().filter {
+                it.name.contains(
+                    query,
+                    ignoreCase = true
+                )
+            }.map { it.toDomain() }
                 .asPagingSourceFactory()
         )
 
@@ -49,11 +55,11 @@ class MainViewModelTest {
     fun `SHOULD return filtered characters WHEN query is not empty`() = runTest {
 
         val initialKey = 0
-        mockPageResponse(initialKey)
-        sut = MainViewModel(mockGetListOfCharactersUseCase)
-
         val query = "Rick"
+        mockPageResponse(initialKey, query)
+        sut = MainViewModel(mockGetListOfCharactersUseCase)
         sut.queryFlow.value = query
+
         val items: Flow<PagingData<Character>> = sut.characters
 
         val itemsSnapshot: List<Character> = items.asSnapshot {

@@ -77,7 +77,7 @@ class CharacterPagingSourceTest {
     @Test
     fun `SHOULD return correct page WHEN api correct response`() = runTest {
         val key = 1
-        coEvery { mockApi.getCharacters(key) } returns nextResponse
+        coEvery { mockApi.getCharacters("", key) } returns nextResponse
 
         val expectedResult = LoadResult.Page(
             data = nextResponse.results.map { it.toDomain() },
@@ -94,7 +94,7 @@ class CharacterPagingSourceTest {
     @Test
     fun `SHOULD return LoadResult error WHEN api throws an error`() = runTest {
         val error = IOException("404", Throwable())
-        coEvery { mockApi.getCharacters(1) } throws error
+        coEvery { mockApi.getCharacters("", 1) } throws error
 
         val expectedResult = LoadResult.Error<Int, Character>(error)
 

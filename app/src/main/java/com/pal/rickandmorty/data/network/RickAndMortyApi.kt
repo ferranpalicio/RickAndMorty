@@ -10,5 +10,8 @@ const val BASE_URL = "https://rickandmortyapi.com/api/"
 interface RickAndMortyApi {
 
     @GET("character")
-    suspend fun getCharacters(@Query("page") page: Int): PageResponse<CharacterDTO>
+    suspend fun getCharacters(
+        @Query("name") nameFilter: String = "",
+        @Query("page") page: Int
+    ): PageResponse<CharacterDTO>
 }
